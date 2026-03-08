@@ -752,12 +752,15 @@ async function solve() {
     // Build pipeline from visual builder
     const steps = buildFullPipelineString() || undefined;
 
-    const res = await fetch(API_BASE + '/api/solve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scramble, solutions, min, max, quality, format, showAll, backend, steps }),
-      signal: solveController.signal
-    });
+    const body = JSON.stringify({ scramble, solutions, min, max, quality, format, showAll, backend, steps });
+    const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: solveController.signal };
+
+    let res = await fetch(API_BASE + '/api/solve', fetchOpts);
+    // Cloud Run cold start may return HTML — retry once after 5s
+    if (!(res.headers.get('content-type') || '').includes('application/json')) {
+      await new Promise(r => setTimeout(r, 5000));
+      res = await fetch(API_BASE + '/api/solve', fetchOpts);
+    }
     const data = await res.json();
     if (!res.ok || data.success === false) throw new Error(data.error || data.stderr || 'Server error');
 
