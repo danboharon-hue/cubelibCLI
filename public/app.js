@@ -722,6 +722,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let solveController = null;
 
+// Wake up Cloud Run server (cold start can take 10-15s)
+async function warmUpServer(signal) {
+  try {
+    console.log('[Cubelib] Warming up server...');
+    const res = await fetch(API_BASE + '/api/health', { signal });
+    console.log('[Cubelib] Server warm-up response:', res.status);
+    return res.ok;
+  } catch (e) {
+    console.warn('[Cubelib] Warm-up failed:', e.message);
+    return false;
+  }
+}
+
 async function solve() {
   const scramble = document.getElementById('solve-scramble').value.trim();
   if (!scramble) return;
@@ -753,28 +766,56 @@ async function solve() {
     const steps = buildFullPipelineString() || undefined;
 
     const requestBody = JSON.stringify({ scramble, solutions, min, max, quality, format, showAll, backend, steps });
+
+    // First, warm up the server (handles Cloud Run cold start)
+    const statusEl = document.getElementById('solve-status');
+    if (statusEl) statusEl.textContent = 'Waking server...';
+    await warmUpServer(solveController.signal);
+    if (statusEl) statusEl.textContent = 'Computing...';
+
+    // Now send the actual solve request with retries
     let data = null;
-    // Retry up to 2 times if server returns non-JSON (cold start)
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const res = await fetch(API_BASE + '/api/solve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: requestBody,
-        signal: solveController.signal
-      });
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        if (attempt < 2) {
-          // Wait 2 seconds and retry (server cold start)
-          await new Promise(r => setTimeout(r, 2000));
+    let lastError = '';
+    const delays = [3000, 5000, 8000]; // Progressive retry delays
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        console.log(`[Cubelib] Solve attempt ${attempt + 1}/4...`);
+        const res = await fetch(API_BASE + '/api/solve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: requestBody,
+          signal: solveController.signal
+        });
+        console.log(`[Cubelib] Response: HTTP ${res.status}, Content-Type: ${res.headers.get('content-type')}`);
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          const text = await res.text();
+          console.warn(`[Cubelib] Non-JSON response body:`, text.substring(0, 200));
+          lastError = `Server returned HTTP ${res.status} (non-JSON). `;
+          if (attempt < 3) {
+            const delay = delays[attempt];
+            if (statusEl) statusEl.textContent = `Retrying (${attempt + 1}/3)...`;
+            await new Promise(r => setTimeout(r, delay));
+            continue;
+          }
+          throw new Error(lastError + 'The server may be starting up. Please try again in a moment.');
+        }
+        data = await res.json();
+        console.log('[Cubelib] Solve response:', data.success ? 'success' : 'error');
+        break;
+      } catch (fetchErr) {
+        if (fetchErr.name === 'AbortError') throw fetchErr;
+        console.error(`[Cubelib] Attempt ${attempt + 1} error:`, fetchErr.message);
+        lastError = fetchErr.message;
+        if (attempt < 3) {
+          if (statusEl) statusEl.textContent = `Retrying (${attempt + 1}/3)...`;
+          await new Promise(r => setTimeout(r, delays[attempt] || 5000));
           continue;
         }
-        throw new Error('Server is not responding. Please try again.');
+        throw fetchErr;
       }
-      data = await res.json();
-      break;
     }
-    if (!data) throw new Error('Server is not responding. Please try again.');
+    if (!data) throw new Error('Server is not responding after multiple attempts. Please try again.');
     if (!data.success && data.success !== undefined) throw new Error(data.error || data.stderr || 'Server error');
 
     const result = data.output || data.result || '';
