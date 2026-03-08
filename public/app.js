@@ -752,18 +752,30 @@ async function solve() {
     // Build pipeline from visual builder
     const steps = buildFullPipelineString() || undefined;
 
-    const res = await fetch(API_BASE + '/api/solve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scramble, solutions, min, max, quality, format, showAll, backend, steps }),
-      signal: solveController.signal
-    });
-    const contentType = res.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      throw new Error('Server returned an unexpected response. It may be starting up — please try again in a few seconds.');
+    const requestBody = JSON.stringify({ scramble, solutions, min, max, quality, format, showAll, backend, steps });
+    let data = null;
+    // Retry up to 2 times if server returns non-JSON (cold start)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const res = await fetch(API_BASE + '/api/solve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody,
+        signal: solveController.signal
+      });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        if (attempt < 2) {
+          // Wait 2 seconds and retry (server cold start)
+          await new Promise(r => setTimeout(r, 2000));
+          continue;
+        }
+        throw new Error('Server is not responding. Please try again.');
+      }
+      data = await res.json();
+      break;
     }
-    const data = await res.json();
-    if (!res.ok || data.success === false) throw new Error(data.error || data.stderr || 'Server error');
+    if (!data) throw new Error('Server is not responding. Please try again.');
+    if (!data.success && data.success !== undefined) throw new Error(data.error || data.stderr || 'Server error');
 
     const result = data.output || data.result || '';
     document.getElementById('solve-output').textContent = result;
