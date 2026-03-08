@@ -261,6 +261,16 @@ select.input {
 .btn-icon { width: 40px; height: 40px; padding: 0; flex-shrink: 0; }
 .btn-block { width: 100%; }
 
+.solve-buttons { display: flex; gap: 8px; }
+.solve-buttons .btn-lg { flex: 1; }
+.stop-btn {
+  background: var(--red-500) !important;
+  border-color: var(--red-500) !important;
+  color: var(--white) !important;
+  font-weight: 600;
+}
+.stop-btn:hover { opacity: 0.9; }
+
 .spinner {
   display: inline-block; width: 14px; height: 14px;
   border: 2px solid rgba(255,255,255,.25);

@@ -605,43 +605,72 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== SOLVE =====
 // ===============================================================
 
+let solveController = null;
+
 async function solve() {
   const scramble = document.getElementById('solve-scramble').value.trim();
-  if (!scramble) {
-    showToast('Enter a scramble first');
-    return;
-  }
+  if (!scramble) return;
 
   const btn = document.getElementById('solve-btn');
+  const stopBtn = document.getElementById('stop-btn');
   setLoading(btn, true);
+  if (stopBtn) stopBtn.style.display = '';
+
+  // Create abort controller for timeout
+  solveController = new AbortController();
+  const timeoutId = setTimeout(() => {
+    solveController.abort();
+    stopSolve();
+  }, 240000); // 4 minutes
 
   try {
     const format = document.querySelector('input[name="format"]:checked').value;
-    const count = parseInt(document.getElementById('solve-count').value) || 1;
+    const solutions = parseInt(document.getElementById('solve-count').value) || 1;
     const minVal = document.getElementById('solve-min').value;
     const maxVal = document.getElementById('solve-max').value;
     const min = minVal !== '' ? parseInt(minVal) : null;
     const max = maxVal !== '' ? parseInt(maxVal) : null;
     const quality = parseInt(document.getElementById('solve-quality').value);
-    const all = document.getElementById('solve-all').checked;
+    const showAll = document.getElementById('solve-all').checked || undefined;
     const backend = document.getElementById('solve-backend').value;
 
     // Build pipeline from visual builder
     const steps = buildFullPipelineString() || undefined;
 
-    const data = await api('solve', { scramble, count, min, max, quality, format, all, backend, steps });
+    const res = await fetch(API_BASE + '/api/solve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scramble, solutions, min, max, quality, format, showAll, backend, steps }),
+      signal: solveController.signal
+    });
+    const data = await res.json();
+    if (!res.ok || data.success === false) throw new Error(data.error || data.stderr || 'Server error');
 
-    document.getElementById('solve-output').textContent = data.result;
+    const result = data.output || data.result || '';
+    document.getElementById('solve-output').textContent = result;
     document.getElementById('solve-result').style.display = 'block';
 
     applyScrambleToCubeState(scramble);
-    setupSolutionPlayer(data.result, scramble, format);
+    setupSolutionPlayer(result, scramble, format);
 
   } catch (err) {
-    showToast('Error: ' + err.message);
+    if (err.name === 'AbortError') {
+      document.getElementById('solve-output').textContent = 'Stopped (4 minute timeout reached)';
+      document.getElementById('solve-result').style.display = 'block';
+    }
   } finally {
+    clearTimeout(timeoutId);
     setLoading(btn, false);
+    if (stopBtn) stopBtn.style.display = 'none';
+    solveController = null;
   }
+}
+
+async function stopSolve() {
+  // Abort frontend request
+  if (solveController) solveController.abort();
+  // Tell server to stop calculation
+  try { await fetch(API_BASE + '/api/stop', { method: 'POST' }); } catch(e) {}
 }
 
 // ===== SOLUTION PLAYER =====
