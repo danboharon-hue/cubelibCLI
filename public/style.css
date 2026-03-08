@@ -3,7 +3,7 @@
    Clean, light-on-dark design with IBM Plex font system
    ========================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Nunito:wght@700;800;900&display=swap');
 
 /* ── Tokens ── */
 :root {
@@ -85,8 +85,7 @@ body {
    TOP BAR
    ========================================================== */
 .topbar {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 100;
   background: var(--white);
   border-bottom: 1px solid var(--gray-200);
@@ -104,10 +103,11 @@ body {
 }
 
 .brand-name {
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: var(--gray-900);
-  letter-spacing: -0.03em;
+  font-size: 3.2rem;
+  font-weight: 800;
+  color: var(--sky-600);
+  letter-spacing: -0.02em;
+  font-family: 'Nunito', var(--font-sans);
 }
 
 
@@ -129,7 +129,7 @@ body {
   align-items: start;
 }
 
-.sidebar { position: sticky; top: 96px; }
+.sidebar { position: sticky; top: 24px; }
 .content { min-width: 0; }
 
 /* ==========================================================
@@ -667,6 +667,17 @@ select.input {
 .subset-chip.active {
   background: var(--sky-500); border-color: var(--sky-500);
   color: var(--white); font-weight: 600;
+}
+.trigger-custom-input {
+  width: 100%; padding: 8px 10px;
+  background: var(--white); border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm); color: var(--gray-900);
+  font-size: .85rem; font-family: var(--font-mono);
+  transition: border-color .15s, box-shadow .15s;
+}
+.trigger-custom-input:focus {
+  outline: none; border-color: var(--sky-500);
+  box-shadow: 0 0 0 3px rgba(14,165,233,.12);
 }
 
 /* ==========================================================

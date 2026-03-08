@@ -58,8 +58,9 @@ const STEP_DEFS = {
     desc: 'Orient corners and edges on the second axis. Reduces the cube to the domino group.',
     params: {
       niss:     { type: 'select', label: 'NISS', desc: 'When to allow switching', options: ['', 'none', 'before', 'always'], default: 'before' },
-      triggers: { type: 'text', label: 'Triggers', desc: "Restrict allowed move sequences, e.g.: R,RU2R,RU'R. Required if RZP precedes" },
+      triggers: { type: 'trigger-chips', label: 'Triggers', desc: "Restrict allowed move sequences. Click presets or type custom triggers.", presets: ['R', 'RL', 'RUL', "RU'L", 'RF2U2R', 'RU2L', 'RU2F2R'] },
       subsets:  { type: 'chips', label: 'Subsets', desc: 'Click to select DR subsets to restrict to', chips: ['0c0','4a1','4b2','4a2','2c3','4a3','4b3','0c3','2c4','0c4','4a4','4b4','2c5','4b5'] },
+      eslice:   { type: 'chips', label: 'E-Slice', desc: 'Filter by number of bad edges', chips: ['0e','2e','4e'] },
       max:      { type: 'number', label: 'Max Length', desc: 'Maximum number of moves' },
       min:      { type: 'number', label: 'Min Length', desc: 'Minimum number of moves' },
     }
@@ -69,9 +70,11 @@ const STEP_DEFS = {
     title: 'Half-Turn Reduction',
     desc: 'Reduce to 180\u00B0 turns only. After this step, no more quarter turns.',
     params: {
-      niss:  { type: 'select', label: 'NISS', desc: 'When to allow switching', options: ['', 'none', 'before', 'always'], default: 'before' },
-      max:   { type: 'number', label: 'Max Length', desc: 'Maximum number of moves' },
-      min:   { type: 'number', label: 'Min Length', desc: 'Minimum number of moves' },
+      niss:    { type: 'select', label: 'NISS', desc: 'When to allow switching', options: ['', 'none', 'before', 'always'], default: 'before' },
+      subsets: { type: 'chips', label: 'Subsets', desc: 'Click to select HTR subsets to restrict to', chips: ['0c0','4a1','4b2','4a2','2c3','4a3','4b3','0c3','2c4','0c4','4a4','4b4','2c5','4b5'] },
+      eslice:  { type: 'chips', label: 'E-Slice', desc: 'Filter by number of bad edges', chips: ['0e','2e','4e'] },
+      max:     { type: 'number', label: 'Max Length', desc: 'Maximum number of moves' },
+      min:     { type: 'number', label: 'Min Length', desc: 'Minimum number of moves' },
     }
   },
   FR: {
@@ -125,8 +128,8 @@ let pipelineSteps = [];
 
 // Presets
 const PRESETS = {
-  'default':     [{ type: 'EO' }, { type: 'RZP' }, { type: 'DR', config: { triggers: "R,RU2R,RF2R,RUR,RU'R" } }, { type: 'HTR' }, { type: 'FIN' }],
-  'with-vr':     [{ type: 'EO' }, { type: 'RZP' }, { type: 'DR', config: { triggers: "R,RU2R,RF2R,RUR,RU'R" } }, { type: 'HTR' }, { type: 'FINLS' }, { type: 'VR' }, { type: 'FIN' }],
+  'default':     [{ type: 'EO' }, { type: 'RZP' }, { type: 'DR', config: { triggers: "R,RU2L,RF2U2R,RUL,RU'L" } }, { type: 'HTR' }, { type: 'FIN' }],
+  'with-vr':     [{ type: 'EO' }, { type: 'RZP' }, { type: 'DR', config: { triggers: "R,RU2L,RF2U2R,RUL,RU'L" } }, { type: 'HTR' }, { type: 'FINLS' }, { type: 'VR' }, { type: 'FIN' }],
   'custom':      [],
 };
 
@@ -389,10 +392,28 @@ function renderPipeline() {
 function buildParamString(config) {
   if (!config) return '';
   const parts = [];
+  // Merge subsets + eslice into a single subsets param
+  let subsets = config.subsets || '';
+  const eslice = config.eslice || '';
+  if (eslice && subsets) {
+    // Append e-slice to subsets: "4a1,2c3" + "4e" => "4a1,2c3,4e"
+    subsets = subsets + ',' + eslice;
+  } else if (eslice) {
+    subsets = eslice;
+  }
   for (const [k, v] of Object.entries(config)) {
+    if (k === 'eslice') continue; // merged into subsets
     if (v !== '' && v !== undefined && v !== null) {
-      parts.push(k + '=' + v);
+      if (k === 'subsets') {
+        parts.push('subsets=' + subsets);
+      } else {
+        parts.push(k + '=' + v);
+      }
     }
+  }
+  // If only eslice was set (no subsets key in config)
+  if (eslice && !config.subsets) {
+    parts.push('subsets=' + eslice);
   }
   return parts.join(';');
 }
@@ -438,7 +459,46 @@ function openStepModal(index) {
 
     const currentVal = editingStepTempConfig[key] || '';
 
-    if (paramDef.type === 'chips') {
+    if (paramDef.type === 'trigger-chips') {
+      // Trigger presets + custom text input
+      const wrapper = document.createElement('div');
+      wrapper.id = 'modal-param-' + key;
+
+      const chipsContainer = document.createElement('div');
+      chipsContainer.className = 'subset-chips-container';
+      chipsContainer.style.marginBottom = '8px';
+
+      // Parse current triggers
+      const currentTriggers = currentVal ? currentVal.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const currentSet = new Set(currentTriggers);
+
+      (paramDef.presets || []).forEach(preset => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'subset-chip' + (currentSet.has(preset) ? ' active' : '');
+        chip.textContent = preset;
+        chip.dataset.value = preset;
+        chip.addEventListener('click', () => {
+          chip.classList.toggle('active');
+          syncTriggerInput(wrapper);
+        });
+        chipsContainer.appendChild(chip);
+      });
+      wrapper.appendChild(chipsContainer);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'trigger-custom-input';
+      input.dir = 'ltr';
+      input.placeholder = "Custom triggers (comma separated)";
+      // Show only non-preset triggers in custom input
+      const presetSet = new Set(paramDef.presets || []);
+      const customTriggers = currentTriggers.filter(t => !presetSet.has(t));
+      input.value = customTriggers.join(',');
+      wrapper.appendChild(input);
+
+      field.appendChild(wrapper);
+    } else if (paramDef.type === 'chips') {
       // Multi-select clickable chips
       const container = document.createElement('div');
       container.className = 'subset-chips-container';
@@ -501,6 +561,10 @@ function closeStepModal() {
   editingStepIndex = -1;
 }
 
+function syncTriggerInput(wrapper) {
+  // Sync active chips to show current state (visual only, saving reads both)
+}
+
 function saveStepConfig() {
   if (editingStepIndex < 0) return;
   const step = pipelineSteps[editingStepIndex];
@@ -511,7 +575,17 @@ function saveStepConfig() {
   for (const [key, paramDef] of Object.entries(def.params)) {
     const el = document.getElementById('modal-param-' + key);
     if (!el) continue;
-    if (paramDef.type === 'chips') {
+    if (paramDef.type === 'trigger-chips') {
+      // Collect active preset chips + custom input
+      const activeChips = el.querySelectorAll('.subset-chip.active');
+      const presetVals = Array.from(activeChips).map(c => c.dataset.value);
+      const customInput = el.querySelector('.trigger-custom-input');
+      const customVals = customInput ? customInput.value.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const allVals = [...presetVals, ...customVals];
+      if (allVals.length > 0) {
+        newConfig[key] = allVals.join(',');
+      }
+    } else if (paramDef.type === 'chips') {
       // Collect active chip values
       const activeChips = el.querySelectorAll('.subset-chip.active');
       const vals = Array.from(activeChips).map(c => c.dataset.value);
