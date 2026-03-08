@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.cubing.net/v0/js/cubing/twisty" type="module"></script>
 </head>
 <body>
 
@@ -25,12 +24,8 @@
   <!-- ===== MAIN ===== -->
   <div class="shell">
     <main>
-      <div class="solve-layout">
-
-        <!-- MAIN CONTENT: Solver -->
-        <div class="content">
-          <div class="card">
-            <div class="card-body">
+      <div class="card">
+        <div class="card-body">
 
               <!-- Scramble input -->
               <div class="field">
@@ -219,62 +214,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- SIDEBAR: Cube 3D (right side) -->
-        <aside class="sidebar">
-          <div class="card cube-card">
-            <div class="card-head">
-              <h2>3D View</h2>
-            </div>
-            <div class="cube-container">
-              <twisty-player id="cube-player"
-                puzzle="3x3x3"
-                control-panel="bottom"
-                hint-facelets="floating"
-                background="none"
-                visualization="3D">
-              </twisty-player>
-            </div>
-            <div class="move-buttons">
-              <div class="card-head"><h3>Manual Moves</h3></div>
-              <div class="move-grid">
-                <div class="move-group">
-                  <button class="move-btn" onclick="applyMove('R')">R</button>
-                  <button class="move-btn" onclick="applyMove('R\'')">R'</button>
-                  <button class="move-btn" onclick="applyMove('R2')">R2</button>
-                </div>
-                <div class="move-group">
-                  <button class="move-btn" onclick="applyMove('L')">L</button>
-                  <button class="move-btn" onclick="applyMove('L\'')">L'</button>
-                  <button class="move-btn" onclick="applyMove('L2')">L2</button>
-                </div>
-                <div class="move-group">
-                  <button class="move-btn" onclick="applyMove('U')">U</button>
-                  <button class="move-btn" onclick="applyMove('U\'')">U'</button>
-                  <button class="move-btn" onclick="applyMove('U2')">U2</button>
-                </div>
-                <div class="move-group">
-                  <button class="move-btn" onclick="applyMove('D')">D</button>
-                  <button class="move-btn" onclick="applyMove('D\'')">D'</button>
-                  <button class="move-btn" onclick="applyMove('D2')">D2</button>
-                </div>
-                <div class="move-group">
-                  <button class="move-btn" onclick="applyMove('F')">F</button>
-                  <button class="move-btn" onclick="applyMove('F\'')">F'</button>
-                  <button class="move-btn" onclick="applyMove('F2')">F2</button>
-                </div>
-                <div class="move-group">
-                  <button class="move-btn" onclick="applyMove('B')">B</button>
-                  <button class="move-btn" onclick="applyMove('B\'')">B'</button>
-                  <button class="move-btn" onclick="applyMove('B2')">B2</button>
-                </div>
-              </div>
-              <button class="btn btn-ghost btn-sm btn-block" onclick="resetCube()">Reset Cube</button>
-            </div>
-          </div>
-        </aside>
-      </div>
     </main>
 
     <footer>
@@ -297,7 +236,6 @@
     </div>
   </div>
 
-  <script src="cube3d.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

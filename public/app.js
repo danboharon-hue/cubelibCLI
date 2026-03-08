@@ -58,9 +58,9 @@ const STEP_DEFS = {
     desc: 'Orient corners and edges on the second axis. Reduces the cube to the domino group.',
     params: {
       niss:     { type: 'select', label: 'NISS', desc: 'When to allow switching', options: ['', 'none', 'before', 'always'], default: 'before' },
-      triggers: { type: 'trigger-chips', label: 'Triggers', desc: "Restrict allowed move sequences. Click presets or type custom triggers.", presets: ['R', 'RL', 'RUL', "RU'L", 'RF2U2R', 'RU2L', 'RU2F2R'] },
+      triggers: { type: 'trigger-chips', label: 'Triggers', desc: "Restrict allowed move sequences. Click presets or type custom triggers.", presets: ['R', 'RF2R', 'RF2U2R', 'RL', 'RUL', 'RUR', "RU'L", "RU'R", 'RU2F2R', 'RU2L', 'RU2R'] },
       subsets:  { type: 'chips', label: 'Subsets', desc: 'Click to select DR subsets to restrict to', chips: ['0c0','4a1','4b2','4a2','2c3','4a3','4b3','0c3','2c4','0c4','4a4','4b4','2c5','4b5'] },
-      eslice:   { type: 'chips', label: 'E-Slice', desc: 'Filter by number of bad edges', chips: ['0e','2e','4e'] },
+      eslice:   { type: 'chips', label: 'E-Slice', desc: 'Filter by number of bad edges', chips: ['0e','2e','4e','6e','8e'] },
       max:      { type: 'number', label: 'Max Length', desc: 'Maximum number of moves' },
       min:      { type: 'number', label: 'Min Length', desc: 'Minimum number of moves' },
     }
@@ -70,11 +70,9 @@ const STEP_DEFS = {
     title: 'Half-Turn Reduction',
     desc: 'Reduce to 180\u00B0 turns only. After this step, no more quarter turns.',
     params: {
-      niss:    { type: 'select', label: 'NISS', desc: 'When to allow switching', options: ['', 'none', 'before', 'always'], default: 'before' },
-      subsets: { type: 'chips', label: 'Subsets', desc: 'Click to select HTR subsets to restrict to', chips: ['0c0','4a1','4b2','4a2','2c3','4a3','4b3','0c3','2c4','0c4','4a4','4b4','2c5','4b5'] },
-      eslice:  { type: 'chips', label: 'E-Slice', desc: 'Filter by number of bad edges', chips: ['0e','2e','4e'] },
-      max:     { type: 'number', label: 'Max Length', desc: 'Maximum number of moves' },
-      min:     { type: 'number', label: 'Min Length', desc: 'Minimum number of moves' },
+      niss:  { type: 'select', label: 'NISS', desc: 'When to allow switching', options: ['', 'none', 'before', 'always'], default: 'before' },
+      max:   { type: 'number', label: 'Max Length', desc: 'Maximum number of moves' },
+      min:   { type: 'number', label: 'Min Length', desc: 'Minimum number of moves' },
     }
   },
   FR: {
@@ -128,8 +126,8 @@ let pipelineSteps = [];
 
 // Presets
 const PRESETS = {
-  'default':     [{ type: 'EO' }, { type: 'RZP' }, { type: 'DR', config: { triggers: "R,RU2L,RF2U2R,RUL,RU'L" } }, { type: 'HTR' }, { type: 'FIN' }],
-  'with-vr':     [{ type: 'EO' }, { type: 'RZP' }, { type: 'DR', config: { triggers: "R,RU2L,RF2U2R,RUL,RU'L" } }, { type: 'HTR' }, { type: 'FINLS' }, { type: 'VR' }, { type: 'FIN' }],
+  'default':     [{ type: 'EO' }, { type: 'RZP' }, { type: 'DR', config: { triggers: "R,RU2R,RF2R,RUR,RU'R" } }, { type: 'HTR' }, { type: 'FIN' }],
+  'with-vr':     [{ type: 'EO' }, { type: 'RZP' }, { type: 'DR', config: { triggers: "R,RU2R,RF2R,RUR,RU'R" } }, { type: 'HTR' }, { type: 'FINLS' }, { type: 'VR' }, { type: 'FIN' }],
   'custom':      [],
 };
 
@@ -724,12 +722,16 @@ async function solve() {
     document.getElementById('solve-output').textContent = result;
     document.getElementById('solve-result').style.display = 'block';
 
-    applyScrambleToCubeState(scramble);
     setupSolutionPlayer(result, scramble, format);
 
   } catch (err) {
     if (err.name === 'AbortError') {
       document.getElementById('solve-output').textContent = 'Stopped (4 minute timeout reached)';
+      document.getElementById('solve-result').style.display = 'block';
+    } else {
+      // Show server error to user
+      const msg = err.message || 'Unknown error';
+      document.getElementById('solve-output').textContent = 'Error: ' + msg;
       document.getElementById('solve-result').style.display = 'block';
     }
   } finally {
@@ -810,17 +812,7 @@ function renderPlayerMoves() {
 }
 
 function renderPlayerCube() {
-  // Update internal state for tracking
-  cubeState = deepCopy(SOLVED_STATE);
-  cubeState = applyMoves(cubeState, playerScramble);
-  for (let i = 0; i < playerStep; i++) cubeState = applyMoveToCube(cubeState, playerMoves[i]);
-
-  // Update twisty-player: setup = scramble, alg = solution moves up to current step
-  const player = document.getElementById('cube-player');
-  if (player) {
-    player.setAttribute('setup-alg', playerScramble);
-    player.setAttribute('alg', playerMoves.slice(0, playerStep).join(' '));
-  }
+  // No 3D cube — player step tracking only via renderPlayerMoves
 }
 
 function playerNext() { if (playerStep < playerMoves.length) { playerStep++; renderPlayerMoves(); renderPlayerCube(); } }
@@ -851,7 +843,6 @@ async function generateAndFillScramble() {
     const scramble = await randomScrambleForEvent('333');
     const scrambleStr = scramble.toString();
     document.getElementById('solve-scramble').value = scrambleStr;
-    applyScrambleToCubeState(scrambleStr);
   } catch (err) {
     // Fallback: generate a basic random scramble
     const moves = ['R','L','U','D','F','B'];
@@ -866,7 +857,6 @@ async function generateAndFillScramble() {
     }
     const scrambleStr = scramble.join(' ');
     document.getElementById('solve-scramble').value = scrambleStr;
-    applyScrambleToCubeState(scrambleStr);
   }
 }
 
@@ -880,12 +870,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Keyboard
   document.getElementById('solve-scramble').addEventListener('keydown', (e) => { if (e.key === 'Enter') solve(); });
-
-  // Auto-apply scramble to cube
-  document.getElementById('solve-scramble').addEventListener('change', (e) => {
-    const val = e.target.value.trim();
-    if (val) applyScrambleToCubeState(val);
-  });
 
   // Speed slider
   const speedSlider = document.getElementById('player-speed');
