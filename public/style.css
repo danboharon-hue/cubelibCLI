@@ -383,15 +383,15 @@ select.input {
 }
 
 .pipeline-track {
-  display: flex; align-items: center;
+  display: flex; align-items: center; flex-wrap: wrap;
   padding: 14px;
   background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-md);
-  overflow-x: auto;
   min-height: 80px;
   margin-bottom: 12px;
   direction: ltr;
+  gap: 4px 0;
 }
 .pipeline-track:empty::after {
   content:'Click a step below to add...';

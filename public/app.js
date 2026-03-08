@@ -484,15 +484,35 @@ function openStepModal(index) {
       });
       wrapper.appendChild(chipsContainer);
 
+      // Custom trigger chips area
+      const customChipsContainer = document.createElement('div');
+      customChipsContainer.className = 'subset-chips-container custom-triggers-area';
+      customChipsContainer.style.marginBottom = '6px';
+      const presetSet = new Set(paramDef.presets || []);
+      const customTriggers = currentTriggers.filter(t => !presetSet.has(t));
+      customTriggers.forEach(t => {
+        addCustomTriggerChip(customChipsContainer, t);
+      });
+      wrapper.appendChild(customChipsContainer);
+
       const input = document.createElement('input');
       input.type = 'text';
       input.className = 'trigger-custom-input';
       input.dir = 'ltr';
-      input.placeholder = "Custom triggers (comma separated)";
-      // Show only non-preset triggers in custom input
-      const presetSet = new Set(paramDef.presets || []);
-      const customTriggers = currentTriggers.filter(t => !presetSet.has(t));
-      input.value = customTriggers.join(',');
+      input.placeholder = "Type trigger and press Enter (e.g. RU2R)";
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = input.value.trim();
+          if (val) {
+            // Support comma-separated too
+            val.split(',').map(s => s.trim()).filter(Boolean).forEach(t => {
+              addCustomTriggerChip(customChipsContainer, t);
+            });
+            input.value = '';
+          }
+        }
+      });
       wrapper.appendChild(input);
 
       field.appendChild(wrapper);
@@ -559,8 +579,27 @@ function closeStepModal() {
   editingStepIndex = -1;
 }
 
+function addCustomTriggerChip(container, value) {
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'subset-chip active custom-trigger-chip';
+  chip.dataset.value = value;
+  const text = document.createElement('span');
+  text.textContent = value;
+  chip.appendChild(text);
+  const removeX = document.createElement('span');
+  removeX.textContent = ' \u00D7';
+  removeX.style.marginLeft = '4px';
+  removeX.style.opacity = '0.7';
+  chip.appendChild(removeX);
+  chip.addEventListener('click', () => {
+    chip.remove();
+  });
+  container.appendChild(chip);
+}
+
 function syncTriggerInput(wrapper) {
-  // Sync active chips to show current state (visual only, saving reads both)
+  // Visual only
 }
 
 function saveStepConfig() {
@@ -574,12 +613,16 @@ function saveStepConfig() {
     const el = document.getElementById('modal-param-' + key);
     if (!el) continue;
     if (paramDef.type === 'trigger-chips') {
-      // Collect active preset chips + custom input
-      const activeChips = el.querySelectorAll('.subset-chip.active');
-      const presetVals = Array.from(activeChips).map(c => c.dataset.value);
+      // Collect active preset chips
+      const presetChips = el.querySelectorAll('.subset-chips-container:first-child .subset-chip.active');
+      const presetVals = Array.from(presetChips).map(c => c.dataset.value);
+      // Collect custom trigger chips
+      const customChips = el.querySelectorAll('.custom-trigger-chip');
+      const customVals = Array.from(customChips).map(c => c.dataset.value);
+      // Also collect anything typed but not yet Enter'd
       const customInput = el.querySelector('.trigger-custom-input');
-      const customVals = customInput ? customInput.value.split(',').map(s => s.trim()).filter(Boolean) : [];
-      const allVals = [...presetVals, ...customVals];
+      const typedVals = customInput && customInput.value.trim() ? customInput.value.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const allVals = [...presetVals, ...customVals, ...typedVals];
       if (allVals.length > 0) {
         newConfig[key] = allVals.join(',');
       }
@@ -715,6 +758,10 @@ async function solve() {
       body: JSON.stringify({ scramble, solutions, min, max, quality, format, showAll, backend, steps }),
       signal: solveController.signal
     });
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('Server returned an unexpected response. It may be starting up — please try again in a few seconds.');
+    }
     const data = await res.json();
     if (!res.ok || data.success === false) throw new Error(data.error || data.stderr || 'Server error');
 
