@@ -113,35 +113,19 @@ body {
 /* Subtitle section below title */
 .topbar-subtitle {
   text-align: center;
-  padding-bottom: 12px;
-  font-family: var(--font-sans);
+  padding: 0 20px 12px;
   font-size: 0.8rem;
   color: var(--gray-500);
-  line-height: 1.8;
+  line-height: 2;
 }
-.topbar-subtitle a {
-  color: var(--sky-600);
-  text-decoration: none;
-  font-weight: 500;
-}
+.topbar-subtitle a { color: var(--sky-600); text-decoration: none; font-weight: 500; }
 .topbar-subtitle a:hover { text-decoration: underline; }
-.topbar-subtitle .link-sep { color: var(--gray-300); margin: 0 2px; }
-.topbar-subtitle a.link-nissy {
-  color: var(--red-500);
-  font-weight: 700;
-  font-size: 0.88rem;
-}
-.topbar-subtitle a.link-nissy:hover { color: #dc2626; }
-.subtitle-credit {
-  font-size: 0.75rem;
-  color: var(--gray-400);
-}
-.subtitle-credit .credit-name {
-  color: #ec4899;
-  font-weight: 700;
-  text-decoration: none;
-}
-.subtitle-credit .credit-name:hover { color: #db2777; text-decoration: underline; }
+.link-sep { color: var(--gray-300); }
+.link-nissy { color: var(--red-500) !important; font-weight: 700 !important; font-size: 0.88rem; }
+.link-nissy:hover { color: #dc2626 !important; }
+.subtitle-credit { font-size: 0.75rem; color: var(--gray-400); }
+.credit-name { color: #ec4899 !important; font-weight: 700 !important; text-decoration: none; }
+.credit-name:hover { color: #db2777 !important; text-decoration: underline; }
 
 
 /* ==========================================================
