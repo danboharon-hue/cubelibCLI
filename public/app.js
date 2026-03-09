@@ -820,7 +820,7 @@ function setupSolutionPlayer(result, scramble, format) {
     return;
   }
 
-  playerMoves = parseMoves(solutionStr);
+  playerMoves = solutionStr.split(/\s+/).filter(m => m.length > 0);
   playerScramble = scramble;
   playerStep = 0;
   playerPlaying = false;
