@@ -778,6 +778,7 @@ async function generateAndFillScramble() {
     const scramble = await randomScrambleForEvent('333');
     const scrambleStr = scramble.toString();
     document.getElementById('solve-scramble').value = scrambleStr;
+    autoResizeScramble();
   } catch (err) {
     // Fallback: generate a basic random scramble
     const moves = ['R','L','U','D','F','B'];
@@ -792,6 +793,7 @@ async function generateAndFillScramble() {
     }
     const scrambleStr = scramble.join(' ');
     document.getElementById('solve-scramble').value = scrambleStr;
+    autoResizeScramble();
   }
 }
 
@@ -805,10 +807,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Scramble textarea auto-resize + Enter to solve
   const scrambleEl = document.getElementById('solve-scramble');
-  scrambleEl.addEventListener('input', () => {
-    scrambleEl.style.height = 'auto';
+  window.autoResizeScramble = function() {
+    scrambleEl.style.height = '0';
     scrambleEl.style.height = scrambleEl.scrollHeight + 'px';
-  });
+  };
+  scrambleEl.addEventListener('input', autoResizeScramble);
   scrambleEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); solve(); }
   });
