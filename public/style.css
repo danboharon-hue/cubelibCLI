@@ -112,76 +112,36 @@ body {
 
 /* Subtitle section below title */
 .topbar-subtitle {
-  max-width: 1360px;
-  margin: 0 auto;
-  padding: 0 28px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.subtitle-label {
-  font-family: var(--font-sans);
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--gray-400);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 7px;
-}
-.subtitle-links {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-.subtitle-links a {
-  color: var(--sky-600);
-  text-decoration: none;
+  text-align: center;
+  padding-bottom: 12px;
   font-family: var(--font-sans);
   font-size: 0.8rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--gray-200);
-  background: var(--gray-50);
-  transition: all .15s;
+  color: var(--gray-500);
+  line-height: 1.8;
 }
-.subtitle-links a:hover {
-  background: var(--sky-50);
-  border-color: var(--sky-300);
-  color: var(--sky-700);
+.topbar-subtitle a {
+  color: var(--sky-600);
+  text-decoration: none;
+  font-weight: 500;
 }
-.link-dot { display: none; }
-.subtitle-links a.link-nissy {
+.topbar-subtitle a:hover { text-decoration: underline; }
+.topbar-subtitle .link-sep { color: var(--gray-300); margin: 0 2px; }
+.topbar-subtitle a.link-nissy {
   color: var(--red-500);
-  font-size: 0.85rem;
-  font-weight: 800;
-  border-color: rgba(239,68,68,.25);
-  background: rgba(239,68,68,.05);
+  font-weight: 700;
+  font-size: 0.88rem;
 }
-.subtitle-links a.link-nissy:hover {
-  color: #dc2626;
-  border-color: rgba(239,68,68,.4);
-  background: rgba(239,68,68,.1);
-}
+.topbar-subtitle a.link-nissy:hover { color: #dc2626; }
 .subtitle-credit {
-  font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--gray-400);
-  font-weight: 400;
 }
 .subtitle-credit .credit-name {
   color: #ec4899;
   font-weight: 700;
   text-decoration: none;
-  transition: color .15s;
 }
-.subtitle-credit .credit-name:hover {
-  color: #db2777;
-  text-decoration: underline;
-}
+.subtitle-credit .credit-name:hover { color: #db2777; text-decoration: underline; }
 
 
 /* ==========================================================
@@ -706,10 +666,7 @@ footer a:hover { color:var(--sky-700); text-decoration:underline; }
 @media(max-width:768px){
   .topbar-inner { height:auto; padding:12px 16px; }
   .brand-name { font-size: 2.6rem; }
-  .topbar-subtitle { padding: 0 16px 12px; }
-  .subtitle-links { gap: 6px; }
-  .subtitle-links a { font-size: 0.73rem; padding: 3px 8px; }
-  .subtitle-links a.link-nissy { font-size: 0.78rem; }
+  .topbar-subtitle { font-size: 0.73rem; padding-bottom: 10px; }
   textarea.input { font-size: 0.88rem; min-width: 0; }
   .shell { padding:12px 12px 32px; }
   .settings-grid { grid-template-columns:1fr 1fr; }
@@ -733,12 +690,8 @@ footer a:hover { color:var(--sky-700); text-decoration:underline; }
 @media(max-width:480px){
   .settings-grid { grid-template-columns:1fr; }
   .brand-name { font-size: 2rem; }
-  .topbar-subtitle { padding: 0 12px 8px; }
-  .subtitle-label { font-size: 0.6rem; }
-  .subtitle-links { gap: 5px; }
-  .subtitle-links a { font-size: 0.68rem; padding: 3px 7px; }
-  .subtitle-links a.link-nissy { font-size: 0.73rem; }
-  .subtitle-credit { font-size: 0.65rem; }
+  .topbar-subtitle { font-size: 0.68rem; padding-bottom: 8px; }
+  .topbar-subtitle a.link-nissy { font-size: 0.75rem; }
   .topbar-inner { padding: 10px 12px; }
   .shell { padding: 8px 8px 24px; }
   .card-body { padding: 10px; }
