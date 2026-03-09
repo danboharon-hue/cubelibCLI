@@ -60,7 +60,6 @@ const STEP_DEFS = {
       niss:     { type: 'select', label: 'NISS', desc: 'When to allow switching', options: ['', 'none', 'before', 'always'], default: 'before' },
       triggers: { type: 'trigger-chips', label: 'Triggers', desc: "Restrict allowed move sequences. Click presets or type custom triggers.", presets: ['R', 'RF2R', 'RF2U2R', 'RL', 'RUL', 'RUR', "RU'L", "RU'R", 'RU2F2R', 'RU2L', 'RU2R'] },
       subsets:  { type: 'chips', label: 'Subsets', desc: 'Click to select DR subsets to restrict to', chips: ['0c0','4a1','4b2','4a2','2c3','4a3','4b3','0c3','2c4','0c4','4a4','4b4','2c5','4b5'] },
-      eslice:   { type: 'chips', label: 'E-Slice', desc: 'Filter by number of bad edges', chips: ['0e','2e','4e','6e','8e'] },
       max:      { type: 'number', label: 'Max Length', desc: 'Maximum number of moves' },
       min:      { type: 'number', label: 'Min Length', desc: 'Minimum number of moves' },
     }
@@ -390,28 +389,10 @@ function renderPipeline() {
 function buildParamString(config) {
   if (!config) return '';
   const parts = [];
-  // Merge subsets + eslice into a single subsets param
-  let subsets = config.subsets || '';
-  const eslice = config.eslice || '';
-  if (eslice && subsets) {
-    // Append e-slice to subsets: "4a1,2c3" + "4e" => "4a1,2c3,4e"
-    subsets = subsets + ',' + eslice;
-  } else if (eslice) {
-    subsets = eslice;
-  }
   for (const [k, v] of Object.entries(config)) {
-    if (k === 'eslice') continue; // merged into subsets
     if (v !== '' && v !== undefined && v !== null) {
-      if (k === 'subsets') {
-        parts.push('subsets=' + subsets);
-      } else {
-        parts.push(k + '=' + v);
-      }
+      parts.push(k + '=' + v);
     }
-  }
-  // If only eslice was set (no subsets key in config)
-  if (eslice && !config.subsets) {
-    parts.push('subsets=' + eslice);
   }
   return parts.join(';');
 }
@@ -522,12 +503,6 @@ function openStepModal(index) {
       container.className = 'subset-chips-container';
       container.id = 'modal-param-' + key;
       const selectedSet = new Set(currentVal ? currentVal.split(',').map(s => s.trim()).filter(Boolean) : []);
-      const isEslice = (key === 'eslice');
-      // E-slice: disabled unless subsets are selected
-      if (isEslice) {
-        const hasSubsets = !!(editingStepTempConfig.subsets || '');
-        if (!hasSubsets) container.classList.add('eslice-disabled');
-      }
       (paramDef.chips || []).forEach(chipVal => {
         const chip = document.createElement('button');
         chip.type = 'button';
@@ -535,10 +510,7 @@ function openStepModal(index) {
         chip.textContent = chipVal;
         chip.dataset.value = chipVal;
         chip.addEventListener('click', () => {
-          if (isEslice && container.classList.contains('eslice-disabled')) return;
           chip.classList.toggle('active');
-          // If this is a subset chip, toggle eslice availability
-          if (key === 'subsets') updateEsliceState();
         });
         container.appendChild(chip);
       });
@@ -586,20 +558,6 @@ function openStepModal(index) {
 function closeStepModal() {
   document.getElementById('step-modal').style.display = 'none';
   editingStepIndex = -1;
-}
-
-function updateEsliceState() {
-  const subsetsContainer = document.getElementById('modal-param-subsets');
-  const esliceContainer = document.getElementById('modal-param-eslice');
-  if (!subsetsContainer || !esliceContainer) return;
-  const hasActive = subsetsContainer.querySelectorAll('.subset-chip.active').length > 0;
-  if (hasActive) {
-    esliceContainer.classList.remove('eslice-disabled');
-  } else {
-    esliceContainer.classList.add('eslice-disabled');
-    // Deselect all eslice chips
-    esliceContainer.querySelectorAll('.subset-chip.active').forEach(c => c.classList.remove('active'));
-  }
 }
 
 function addCustomTriggerChip(container, value) {
@@ -788,9 +746,16 @@ async function solve() {
     document.getElementById('solve-output').textContent = result;
     document.getElementById('solve-result').style.display = 'block';
 
+    // Show the command that was sent
+    const cmdEl = document.getElementById('solve-command');
+    if (cmdEl && data.command) {
+      cmdEl.textContent = '$ ' + data.command;
+      cmdEl.style.display = 'block';
+    }
+
   } catch (err) {
     if (err.name === 'AbortError') {
-      document.getElementById('solve-output').textContent = 'Stopped (4 minute timeout reached)';
+      document.getElementById('solve-output').textContent = 'Stopped';
       document.getElementById('solve-result').style.display = 'block';
     } else {
       const msg = err.message || 'Unknown error';

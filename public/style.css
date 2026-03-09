@@ -298,7 +298,7 @@ select.input {
 
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
@@ -504,6 +504,14 @@ select.input {
   background:var(--white);
 }
 
+.command-display {
+  padding:8px 16px;
+  font-family:var(--font-mono); font-size:.75rem;
+  color:var(--gray-500); background:var(--gray-50);
+  border-top:1px solid var(--gray-100);
+  white-space:pre-wrap; word-break:break-all;
+}
+
 
 
 /* ==========================================================
@@ -601,7 +609,6 @@ select.input {
   background: var(--sky-500); border-color: var(--sky-500);
   color: var(--white); font-weight: 600;
 }
-.eslice-disabled { opacity: 0.35; pointer-events: none; }
 .trigger-custom-input {
   width: 100%; padding: 8px 10px;
   background: var(--white); border: 1px solid var(--gray-300);
