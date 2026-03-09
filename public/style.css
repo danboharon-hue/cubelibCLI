@@ -103,11 +103,58 @@ body {
 }
 
 .brand-name {
-  font-size: 3.2rem;
+  font-size: 3.8rem;
   font-weight: 800;
   color: var(--sky-600);
   letter-spacing: -0.02em;
   font-family: 'Nunito', var(--font-sans);
+}
+
+/* Links bar below title */
+.topbar-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 28px 10px;
+  font-size: 0.78rem;
+  flex-wrap: wrap;
+}
+.topbar-links-label {
+  color: var(--gray-500);
+  font-weight: 500;
+}
+.topbar-links a {
+  color: var(--sky-600);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color .1s;
+}
+.topbar-links a:hover {
+  color: var(--sky-700);
+  text-decoration: underline;
+}
+.topbar-links .link-sep {
+  color: var(--gray-300);
+  user-select: none;
+}
+.topbar-links a.link-nissy {
+  color: var(--red-500);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.topbar-links a.link-nissy:hover {
+  color: #dc2626;
+}
+.topbar-credit {
+  text-align: center;
+  padding: 0 28px 8px;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+.topbar-credit .credit-name {
+  color: #ec4899;
+  font-weight: 700;
 }
 
 
@@ -632,7 +679,10 @@ footer a:hover { color:var(--sky-700); text-decoration:underline; }
    ========================================================== */
 @media(max-width:768px){
   .topbar-inner { height:auto; padding:12px 16px; }
-  .brand-name { font-size: 2.2rem; }
+  .brand-name { font-size: 2.6rem; }
+  .topbar-links { padding: 0 16px 8px; font-size: 0.73rem; gap: 4px; }
+  .topbar-credit { padding: 0 16px 6px; font-size: 0.7rem; }
+  textarea.input { font-size: 0.88rem; min-width: 0; }
   .shell { padding:12px 12px 32px; }
   .settings-grid { grid-template-columns:1fr 1fr; }
   .card-body { padding: 14px; }
@@ -654,7 +704,10 @@ footer a:hover { color:var(--sky-700); text-decoration:underline; }
 }
 @media(max-width:480px){
   .settings-grid { grid-template-columns:1fr; }
-  .brand-name { font-size: 1.8rem; }
+  .brand-name { font-size: 2rem; }
+  .topbar-links { padding: 0 12px 6px; font-size: 0.7rem; gap: 3px; }
+  .topbar-links a.link-nissy { font-size: 0.78rem; }
+  .topbar-credit { padding: 0 12px 6px; font-size: 0.68rem; }
   .topbar-inner { padding: 10px 12px; }
   .shell { padding: 8px 8px 24px; }
   .card-body { padding: 10px; }

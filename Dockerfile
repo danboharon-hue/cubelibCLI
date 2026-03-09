@@ -19,6 +19,13 @@ WORKDIR /app
 COPY --from=builder /cubelib/cli/target/release/cubelib-cli /app/cubelib-cli
 RUN chmod +x /app/cubelib-cli
 
+# Pre-generate pruning tables during build
+RUN mkdir -p /root/.cubelib/tables/333
+RUN /app/cubelib-cli --no-check-update solve -q 100 -n 1 -f plain -s "EO>DR>HTR>FIN" "R U R' U'" || true
+RUN /app/cubelib-cli --no-check-update solve -q 100 -n 1 -f plain -s "EO>DR>HTR>FINLS>VR>FIN" "R U R' U'" || true
+RUN /app/cubelib-cli --no-check-update solve -q 100 -n 1 -f plain -s "EO>DR>HTR>FRLS>FINLS" "R U R' U'" || true
+RUN ls -la /root/.cubelib/tables/333/
+
 # Copy server files
 COPY api_server.py .
 
