@@ -168,8 +168,9 @@ body {
   color: var(--gray-500);
   margin-bottom: 4px;
 }
-.field-row { display: flex; gap: 8px; }
+.field-row { display: flex; gap: 8px; align-items: flex-start; }
 .field-row .input { flex: 1; }
+textarea.input { resize: none; overflow: hidden; line-height: 1.5; }
 
 .input {
   width: 100%;

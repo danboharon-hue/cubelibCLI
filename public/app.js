@@ -803,8 +803,15 @@ document.addEventListener('DOMContentLoaded', () => {
   pipelineSteps = PRESETS['default'].map(s => ({ type: s.type, config: s.config ? { ...s.config } : {} }));
   renderPipeline();
 
-  // Keyboard
-  document.getElementById('solve-scramble').addEventListener('keydown', (e) => { if (e.key === 'Enter') solve(); });
+  // Scramble textarea auto-resize + Enter to solve
+  const scrambleEl = document.getElementById('solve-scramble');
+  scrambleEl.addEventListener('input', () => {
+    scrambleEl.style.height = 'auto';
+    scrambleEl.style.height = scrambleEl.scrollHeight + 'px';
+  });
+  scrambleEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); solve(); }
+  });
 
   // Speed slider
   const speedSlider = document.getElementById('player-speed');
