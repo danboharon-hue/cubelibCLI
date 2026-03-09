@@ -115,7 +115,7 @@ body {
    SHELL & LAYOUT
    ========================================================== */
 .shell {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 24px 28px 40px;
 }
@@ -505,36 +505,6 @@ select.input {
 }
 
 
-/* ==========================================================
-   PLAYER
-   ========================================================== */
-.player-header {
-  font-size:.78rem; font-weight:700; color:var(--gray-600);
-  text-transform:uppercase; letter-spacing:.03em;
-  padding:12px 16px 0;
-}
-
-.player-controls {
-  display:flex; gap:4px; justify-content:center; align-items:center;
-  padding:8px 16px; flex-wrap:wrap;
-}
-
-.speed-control { display:flex; align-items:center; gap:6px; margin-left:12px; font-size:.72rem; color:var(--gray-500); font-weight:500; }
-.speed-control input[type="range"] { width:70px; accent-color:var(--sky-500); }
-
-.player-moves { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; padding:4px 16px 8px; }
-
-.player-move {
-  padding:4px 8px; background:var(--gray-100); border-radius:var(--radius-sm);
-  font-family:var(--font-mono); font-size:.78rem; color:var(--gray-500);
-  cursor:pointer; border:1px solid transparent; transition:all .15s;
-}
-.player-move:hover { border-color:var(--gray-300); }
-.player-move.done { background:var(--sky-500); color:#fff; }
-.player-move.current { background:var(--amber-500); color:#000; font-weight:700; }
-
-.player-progress { text-align:center; font-size:.78rem; color:var(--gray-500); padding:0 16px 12px; }
-
 
 /* ==========================================================
    MODAL
@@ -631,6 +601,7 @@ select.input {
   background: var(--sky-500); border-color: var(--sky-500);
   color: var(--white); font-weight: 600;
 }
+.eslice-disabled { opacity: 0.35; pointer-events: none; }
 .trigger-custom-input {
   width: 100%; padding: 8px 10px;
   background: var(--white); border: 1px solid var(--gray-300);
@@ -672,8 +643,6 @@ footer a:hover { color:var(--sky-700); text-decoration:underline; }
   .modal-header { padding: 12px 14px; }
   .modal-footer { padding: 10px 14px; }
   .result-box pre { font-size: .75rem; padding: 10px 12px; max-height: 300px; }
-  .player-controls { gap: 2px; padding: 6px 10px; }
-  .player-moves { padding: 4px 10px 8px; }
   .preset-bar { gap: 4px; }
   .add-step-bar { gap: 4px; }
   .add-step-btn { padding: 4px 8px; font-size: .72rem; }

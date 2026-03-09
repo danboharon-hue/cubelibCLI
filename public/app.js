@@ -522,6 +522,12 @@ function openStepModal(index) {
       container.className = 'subset-chips-container';
       container.id = 'modal-param-' + key;
       const selectedSet = new Set(currentVal ? currentVal.split(',').map(s => s.trim()).filter(Boolean) : []);
+      const isEslice = (key === 'eslice');
+      // E-slice: disabled unless subsets are selected
+      if (isEslice) {
+        const hasSubsets = !!(editingStepTempConfig.subsets || '');
+        if (!hasSubsets) container.classList.add('eslice-disabled');
+      }
       (paramDef.chips || []).forEach(chipVal => {
         const chip = document.createElement('button');
         chip.type = 'button';
@@ -529,7 +535,10 @@ function openStepModal(index) {
         chip.textContent = chipVal;
         chip.dataset.value = chipVal;
         chip.addEventListener('click', () => {
+          if (isEslice && container.classList.contains('eslice-disabled')) return;
           chip.classList.toggle('active');
+          // If this is a subset chip, toggle eslice availability
+          if (key === 'subsets') updateEsliceState();
         });
         container.appendChild(chip);
       });
@@ -577,6 +586,20 @@ function openStepModal(index) {
 function closeStepModal() {
   document.getElementById('step-modal').style.display = 'none';
   editingStepIndex = -1;
+}
+
+function updateEsliceState() {
+  const subsetsContainer = document.getElementById('modal-param-subsets');
+  const esliceContainer = document.getElementById('modal-param-eslice');
+  if (!subsetsContainer || !esliceContainer) return;
+  const hasActive = subsetsContainer.querySelectorAll('.subset-chip.active').length > 0;
+  if (hasActive) {
+    esliceContainer.classList.remove('eslice-disabled');
+  } else {
+    esliceContainer.classList.add('eslice-disabled');
+    // Deselect all eslice chips
+    esliceContainer.querySelectorAll('.subset-chip.active').forEach(c => c.classList.remove('active'));
+  }
 }
 
 function addCustomTriggerChip(container, value) {
@@ -765,8 +788,6 @@ async function solve() {
     document.getElementById('solve-output').textContent = result;
     document.getElementById('solve-result').style.display = 'block';
 
-    setupSolutionPlayer(result, scramble, format);
-
   } catch (err) {
     if (err.name === 'AbortError') {
       document.getElementById('solve-output').textContent = 'Stopped (4 minute timeout reached)';
@@ -789,93 +810,6 @@ async function stopSolve() {
   if (solveController) solveController.abort();
   // Tell server to stop calculation
   try { await fetch(API_BASE + '/api/stop', { method: 'POST' }); } catch(e) {}
-}
-
-// ===== SOLUTION PLAYER =====
-let playerMoves = [];
-let playerStep = 0;
-let playerScramble = '';
-let playerPlaying = false;
-let playerTimer = null;
-
-function getPlayerSpeed() {
-  const slider = document.getElementById('player-speed');
-  return slider ? parseInt(slider.value) : 600;
-}
-
-function setupSolutionPlayer(result, scramble, format) {
-  let solutionStr = '';
-  if (format === 'plain') {
-    solutionStr = result.split('\n')[0].trim();
-  } else if (format === 'compact') {
-    const match = result.match(/^(.+?)\s*\(\d+\)/m);
-    if (match) solutionStr = match[1].trim();
-  } else {
-    const match = result.match(/Solution\s*\(\d+\):\s*(.+)/);
-    if (match) solutionStr = match[1].trim();
-  }
-
-  if (!solutionStr) {
-    document.getElementById('solution-player').style.display = 'none';
-    return;
-  }
-
-  playerMoves = solutionStr.split(/\s+/).filter(m => m.length > 0);
-  playerScramble = scramble;
-  playerStep = 0;
-  playerPlaying = false;
-  clearInterval(playerTimer);
-
-  if (playerMoves.length === 0) {
-    document.getElementById('solution-player').style.display = 'none';
-    return;
-  }
-
-  document.getElementById('solution-player').style.display = 'block';
-  document.getElementById('player-total').textContent = playerMoves.length;
-  document.getElementById('player-play-btn').textContent = '\u25B6';
-  renderPlayerMoves();
-  renderPlayerCube();
-}
-
-function renderPlayerMoves() {
-  const container = document.getElementById('player-moves');
-  container.innerHTML = '';
-  playerMoves.forEach((move, i) => {
-    const el = document.createElement('span');
-    el.className = 'player-move';
-    if (i < playerStep) el.classList.add('done');
-    if (i === playerStep && playerStep < playerMoves.length) el.classList.add('current');
-    el.textContent = move;
-    el.addEventListener('click', () => { playerStep = i + 1; renderPlayerMoves(); renderPlayerCube(); });
-    container.appendChild(el);
-  });
-  document.getElementById('player-step').textContent = playerStep;
-}
-
-function renderPlayerCube() {
-  // No 3D cube — player step tracking only via renderPlayerMoves
-}
-
-function playerNext() { if (playerStep < playerMoves.length) { playerStep++; renderPlayerMoves(); renderPlayerCube(); } }
-function playerPrev() { if (playerStep > 0) { playerStep--; renderPlayerMoves(); renderPlayerCube(); } }
-function playerFirst() { playerStep = 0; renderPlayerMoves(); renderPlayerCube(); }
-function playerLast() { playerStep = playerMoves.length; renderPlayerMoves(); renderPlayerCube(); }
-
-function playerToggle() {
-  playerPlaying = !playerPlaying;
-  const btn = document.getElementById('player-play-btn');
-  if (playerPlaying) {
-    btn.textContent = '\u23F8';
-    if (playerStep >= playerMoves.length) { playerStep = 0; renderPlayerMoves(); renderPlayerCube(); }
-    playerTimer = setInterval(() => {
-      if (playerStep >= playerMoves.length) { playerPlaying = false; btn.textContent = '\u25B6'; clearInterval(playerTimer); return; }
-      playerStep++; renderPlayerMoves(); renderPlayerCube();
-    }, getPlayerSpeed());
-  } else {
-    btn.textContent = '\u25B6';
-    clearInterval(playerTimer);
-  }
 }
 
 // ===== SCRAMBLE GENERATOR (client-side using cubing.js) =====
