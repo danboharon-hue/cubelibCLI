@@ -746,12 +746,6 @@ async function solve() {
     document.getElementById('solve-output').textContent = result;
     document.getElementById('solve-result').style.display = 'block';
 
-    // Show the command that was sent
-    const cmdEl = document.getElementById('solve-command');
-    if (cmdEl && data.command) {
-      cmdEl.textContent = '$ ' + data.command;
-      cmdEl.style.display = 'block';
-    }
 
   } catch (err) {
     if (err.name === 'AbortError') {

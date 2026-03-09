@@ -248,6 +248,7 @@ select.input {
 .btn-sm { padding: 6px 12px; font-size: 0.78rem; }
 .btn-xs { padding: 4px 10px; font-size: 0.73rem; }
 .btn-icon { width: 40px; height: 40px; padding: 0; flex-shrink: 0; }
+.scramble-gen-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: .82rem; flex-shrink: 0; white-space: nowrap; }
 .btn-block { width: 100%; }
 
 .solve-buttons { display: flex; gap: 8px; }
@@ -504,13 +505,6 @@ select.input {
   background:var(--white);
 }
 
-.command-display {
-  padding:8px 16px;
-  font-family:var(--font-mono); font-size:.75rem;
-  color:var(--gray-500); background:var(--gray-50);
-  border-top:1px solid var(--gray-100);
-  white-space:pre-wrap; word-break:break-all;
-}
 
 
 
